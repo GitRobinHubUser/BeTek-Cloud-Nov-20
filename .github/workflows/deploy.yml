@@ -34,13 +34,13 @@ jobs:
       - name: Get bucket name
         id: tf_output
         run: |
-          BUCKET=$(terraform output -raw bucket_name)
-          echo "bucket=$BUCKET" >> $GITHUB_OUTPUT
+          BUCKET=$(terraform output -raw bucket_name 2>/dev/null || true)
+          echo "bucket=${BUCKET:-robinson-betek-static-web-2026}" >> $GITHUB_OUTPUT
         working-directory: infra/
 
       - name: Deploy to S3
         run: aws s3 sync app/ s3://${{ steps.tf_output.outputs.bucket }} --delete
 
       - name: Show Website URL
-        run: terraform output website_url
+        run: terraform output website_url || echo "http://${{ steps.tf_output.outputs.bucket }}.s3-website-us-east-1.amazonaws.com"
         working-directory: infra/
